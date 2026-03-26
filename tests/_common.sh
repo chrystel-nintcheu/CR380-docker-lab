@@ -657,3 +657,53 @@ wait_for_container() {
     done
     return 1
 }
+
+# =============================================================================
+# IMAGE HELPERS / UTILITAIRES IMAGES
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# assert_image_exists — Check a Docker image exists locally
+# FR: Vérifier qu'une image Docker existe localement
+#
+# Usage: assert_image_exists "image:tag"
+# -----------------------------------------------------------------------------
+assert_image_exists() {
+    local image="$1"
+    if docker image inspect "${image}" &>/dev/null; then
+        pass "Image '${image}' exists / Image '${image}' existe"
+    else
+        fail "Image '${image}' not found" \
+             "image exists" "not found" \
+             "Essayez: docker pull ${image}"
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# assert_image_not_exists — Check a Docker image does NOT exist locally
+# FR: Vérifier qu'une image Docker n'existe PAS localement
+#
+# Usage: assert_image_not_exists "image:tag"
+# -----------------------------------------------------------------------------
+assert_image_not_exists() {
+    local image="$1"
+    if docker image inspect "${image}" &>/dev/null; then
+        fail "Image '${image}' still exists" \
+             "image removed" "image present" \
+             "Essayez: docker rmi ${image}"
+    else
+        pass "Image '${image}' cleaned up / Image '${image}' nettoyée"
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# cleanup_image — Remove an image (force, ignore errors)
+# FR: Supprimer une image (forcer, ignorer les erreurs)
+#
+# Usage: cleanup_image "image:tag"
+# -----------------------------------------------------------------------------
+cleanup_image() {
+    local image="$1"
+    docker rmi -f "${image}" &>/dev/null || true
+    log "Cleanup: removed image ${image}"
+}
