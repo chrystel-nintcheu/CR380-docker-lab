@@ -5,6 +5,7 @@
 # Logs and reports (auto-generated)
 logs/*.log
 results/report-*.json
+results/teacher-validation/
 
 # OS files
 .DS_Store
