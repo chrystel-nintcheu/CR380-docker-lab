@@ -23,3 +23,7 @@
 * [Lab 08 — Multi-stage builds](construction-avancee/multi-stage.md)
 * [Lab 09 — ENTRYPOINT & CMD](construction-avancee/entrypoint-cmd.md)
 * [Lab 10 — COPY, ADD & docker cp](construction-avancee/copy-add.md)
+
+## Persistance
+
+* [Lab 11 — Volumes](persistance/volumes.md)

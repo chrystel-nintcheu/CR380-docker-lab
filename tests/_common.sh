@@ -759,3 +759,53 @@ assert_http_reachable() {
              "Vérifiez que le conteneur est démarré et le port mappé"
     fi
 }
+
+# =============================================================================
+# VOLUME HELPERS / UTILITAIRES VOLUMES
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# assert_volume_exists — Check a Docker volume exists
+# FR: Vérifier qu'un volume Docker existe
+#
+# Usage: assert_volume_exists "volume_name"
+# -----------------------------------------------------------------------------
+assert_volume_exists() {
+    local name="$1"
+    if docker volume inspect "${name}" &>/dev/null; then
+        pass "Volume '${name}' exists / Volume '${name}' existe"
+    else
+        fail "Volume '${name}' not found" \
+             "volume exists" "not found" \
+             "Essayez: docker volume create ${name}"
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# assert_volume_not_exists — Check a Docker volume does NOT exist
+# FR: Vérifier qu'un volume Docker n'existe PAS
+#
+# Usage: assert_volume_not_exists "volume_name"
+# -----------------------------------------------------------------------------
+assert_volume_not_exists() {
+    local name="$1"
+    if docker volume inspect "${name}" &>/dev/null; then
+        fail "Volume '${name}' still exists" \
+             "volume removed" "volume present" \
+             "Essayez: docker volume rm ${name}"
+    else
+        pass "Volume '${name}' cleaned up / Volume '${name}' nettoyé"
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# cleanup_volume — Remove a volume (ignore errors)
+# FR: Supprimer un volume (ignorer les erreurs)
+#
+# Usage: cleanup_volume "volume_name"
+# -----------------------------------------------------------------------------
+cleanup_volume() {
+    local name="$1"
+    docker volume rm -f "${name}" &>/dev/null || true
+    log "Cleanup: removed volume ${name}"
+}
