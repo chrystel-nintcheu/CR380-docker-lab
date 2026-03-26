@@ -116,6 +116,18 @@ run_test() {
         "Nous installons maintenant les paquets Docker:\n- docker-ce : le moteur Docker\n- docker-ce-cli : la ligne de commande\n- containerd.io : le runtime de conteneurs\n- docker-buildx-plugin : construction avancée\n- docker-compose-plugin : orchestration multi-conteneurs" \
         "We now install the Docker packages:\n- docker-ce: the Docker engine\n- docker-ce-cli: the command line interface\n- containerd.io: the container runtime\n- docker-buildx-plugin: advanced build features\n- docker-compose-plugin: multi-container orchestration"
 
+    # Clear APT cache and wait for any apt-get locks to release
+    sudo apt-get clean 2>/dev/null || true
+    local lock_wait=0
+    while [ -f /var/lib/apt/lists/lock ] || [ -f /var/cache/apt/archives/lock ] || [ -f /var/lib/dpkg/lock ]; do
+        if (( lock_wait > 30 )); then
+            echo "[warn] APT lock still held after 30s, proceeding anyway"
+            break
+        fi
+        sleep 1
+        lock_wait=$((lock_wait + 1))
+    done
+
     run_cmd "Install Docker CE packages" "${TIMEOUT_BUILD}" \
         sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
             docker-ce docker-ce-cli containerd.io \
