@@ -564,3 +564,96 @@ diff_reports() {
         diff --color=auto <(cat "${prev}") <(cat "${curr}") || true
     fi
 }
+
+# =============================================================================
+# CONTAINER HELPERS / UTILITAIRES CONTENEURS
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# assert_container_exists — Check a container exists (any state)
+# FR: Vérifier qu'un conteneur existe (peu importe l'état)
+#
+# Usage: assert_container_exists "container_name"
+# -----------------------------------------------------------------------------
+assert_container_exists() {
+    local name="$1"
+    if docker ps -a --format '{{.Names}}' | grep -qx "${name}"; then
+        pass "Container '${name}' exists / Conteneur '${name}' existe"
+    else
+        fail "Container '${name}' not found" \
+             "container exists" "not found" \
+             "Essayez: docker ps -a | grep ${name}"
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# assert_container_not_exists — Check a container does NOT exist
+# FR: Vérifier qu'un conteneur n'existe PAS
+#
+# Usage: assert_container_not_exists "container_name"
+# -----------------------------------------------------------------------------
+assert_container_not_exists() {
+    local name="$1"
+    if docker ps -a --format '{{.Names}}' | grep -qx "${name}"; then
+        fail "Container '${name}' still exists" \
+             "container removed" "container present" \
+             "Essayez: docker rm -f ${name}"
+    else
+        pass "Container '${name}' cleaned up / Conteneur '${name}' nettoyé"
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# assert_container_running — Check a container is running
+# FR: Vérifier qu'un conteneur est en cours d'exécution
+#
+# Usage: assert_container_running "container_name"
+# -----------------------------------------------------------------------------
+assert_container_running() {
+    local name="$1"
+    local state
+    state=$(docker inspect -f '{{.State.Status}}' "${name}" 2>/dev/null || echo "not found")
+    if [[ "${state}" == "running" ]]; then
+        pass "Container '${name}' is running / Conteneur '${name}' en exécution"
+    else
+        fail "Container '${name}' not running" \
+             "running" "${state}" \
+             "Essayez: docker start ${name}"
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# cleanup_container — Remove a container (force, ignore errors)
+# FR: Supprimer un conteneur (forcer, ignorer les erreurs)
+#
+# Usage: cleanup_container "container_name"
+# -----------------------------------------------------------------------------
+cleanup_container() {
+    local name="$1"
+    docker rm -f "${name}" &>/dev/null || true
+    log "Cleanup: removed container ${name}"
+}
+
+# -----------------------------------------------------------------------------
+# wait_for_container — Wait for a container to reach "running" state
+# FR: Attendre qu'un conteneur atteigne l'état "running"
+#
+# Usage: wait_for_container "container_name" [timeout_seconds]
+# Returns: 0 if running, 1 if timeout
+# -----------------------------------------------------------------------------
+wait_for_container() {
+    local name="$1"
+    local wait_timeout="${2:-${TIMEOUT_CONTAINER_READY}}"
+    local elapsed=0
+
+    while (( elapsed < wait_timeout )); do
+        local state
+        state=$(docker inspect -f '{{.State.Status}}' "${name}" 2>/dev/null || echo "not found")
+        if [[ "${state}" == "running" ]]; then
+            return 0
+        fi
+        sleep 1
+        (( elapsed++ )) || true
+    done
+    return 1
+}
