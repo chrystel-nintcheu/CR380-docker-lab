@@ -1,0 +1,63 @@
+ARG UBUNTU_VERSION=jammy
+ARG PHP_VERSION=8.2-apache-bookworm
+
+FROM ubuntu:${UBUNTU_VERSION} AS tmpbuilder
+
+ARG DRUPAL_VERSION
+
+ENV DRUPAL_VERSION=${DRUPAL_VERSION}
+ENV DRUPAL_DIR=/tmp/drupal_src
+ENV DRUPAL_BUCKET=https://ftp.drupal.org/files/projects
+ENV DRUPAL_FILE=drupal-${DRUPAL_VERSION}.tar.gz
+
+RUN apt-get update \
+    && apt-get -y install --no-install-recommends curl \
+    && mkdir -p ${DRUPAL_DIR} \
+    && chmod -R 777 ${DRUPAL_DIR}
+
+WORKDIR ${DRUPAL_DIR}
+
+RUN curl --insecure -fSL ${DRUPAL_BUCKET}/${DRUPAL_FILE} -o drupal.tar.gz \
+    && tar -xz --strip-components=1 -f drupal.tar.gz \
+    && ls -lt \
+    && rm -f drupal.tar.gz
+
+FROM php:${PHP_VERSION}
+
+ENV APACHE_DOCUMENT_ROOT=/var/www/html
+
+VOLUME ${APACHE_DOCUMENT_ROOT}
+
+RUN apt-get update \
+    && apt-get -y install --no-install-recommends \
+       vim \
+       zip \
+       unzip \
+       libfreetype6-dev \
+       libjpeg-dev \
+       libpng-dev \
+       libpq-dev \
+       libzip-dev \
+    && docker-php-ext-configure gd \
+           --with-freetype \
+           --with-jpeg=/usr \
+    && docker-php-ext-install -j "$(nproc)" \
+       gd \
+       opcache \
+       zip \
+    && apt -y autoremove \
+    && apt -y clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /var/log/apache2/* \
+    && echo "ServerName localhost" >> /etc/apache2/apache2.conf \
+    && sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf \
+    && a2enmod rewrite
+
+WORKDIR ${APACHE_DOCUMENT_ROOT}
+
+COPY --chown=www-data:www-data --from=tmpbuilder /tmp/drupal_src ${APACHE_DOCUMENT_ROOT}
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+EXPOSE 80

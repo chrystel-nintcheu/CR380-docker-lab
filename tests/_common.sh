@@ -736,3 +736,26 @@ assert_image_smaller_than() {
              "Vérifiez le Dockerfile slim (apt clean, rm lists, etc.)"
     fi
 }
+
+# -----------------------------------------------------------------------------
+# assert_http_reachable — Check a URL returns HTTP 200 or 302
+# FR: Vérifier qu'une URL retourne HTTP 200 ou 302
+#
+# Usage: assert_http_reachable "description" "url" [timeout]
+# -----------------------------------------------------------------------------
+assert_http_reachable() {
+    local description="$1"
+    local url="$2"
+    local http_timeout="${3:-15}"
+
+    local http_code
+    http_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time "${http_timeout}" "${url}" 2>/dev/null || echo "000")
+
+    if [[ "${http_code}" == "200" ]] || [[ "${http_code}" == "302" ]] || [[ "${http_code}" == "301" ]]; then
+        pass "${description} (HTTP ${http_code})"
+    else
+        fail "${description}" \
+             "HTTP 200/301/302" "HTTP ${http_code}" \
+             "Vérifiez que le conteneur est démarré et le port mappé"
+    fi
+}

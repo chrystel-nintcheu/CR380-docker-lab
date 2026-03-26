@@ -17,3 +17,7 @@
 * [Lab 05 — Docker Hub & Images](images-et-conteneurs/docker-hub.md)
 * [Lab 06 — Structure d'image](images-et-conteneurs/structure-image.md)
 * [Lab 07 — Réduire le poids](images-et-conteneurs/reduire-le-poids.md)
+
+## Construction avancée
+
+* [Lab 08 — Multi-stage builds](construction-avancee/multi-stage.md)
