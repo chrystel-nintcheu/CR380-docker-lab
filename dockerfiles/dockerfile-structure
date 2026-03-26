@@ -1,0 +1,8 @@
+FROM nginx
+
+RUN apt-get update --fix-missing
+RUN apt-get -y install vim
+RUN apt-get -y install net-tools
+RUN apt-get -y install curl
+
+WORKDIR /usr/share/nginx/html
