@@ -1,0 +1,51 @@
+#cloud-config
+# =============================================================================
+# CR380 - Docker Lab — Cloud-Init (Fresh VM)
+# =============================================================================
+#
+# FR: Configuration cloud-init pour une VM Ubuntu 24.04 propre.
+#     Installe uniquement les prérequis (git, curl, jq).
+#     Docker sera installé par le Lab 02.
+#
+# EN: Cloud-init configuration for a clean Ubuntu 24.04 VM.
+#     Installs only prerequisites (git, curl, jq).
+#     Docker will be installed by Lab 02.
+#
+# Usage:
+#   multipass launch 24.04 --name cr380-docker \
+#     --cloud-init cloud-init/user-data-fresh.yaml \
+#     --cpus 2 --memory 4G --disk 20G
+# =============================================================================
+
+package_update: true
+package_upgrade: false
+
+packages:
+  - git
+  - curl
+  - jq
+  - ca-certificates
+  - gnupg
+  - lsb-release
+
+# FR: Créer un utilisateur étudiant avec sudo sans mot de passe
+# EN: Create a student user with passwordless sudo
+users:
+  - default
+  - name: student
+    groups: sudo
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: false
+    plain_text_passwd: student
+
+runcmd:
+  - echo "CR380 Docker Lab VM ready — $(date)" > /etc/cr380-ready
+  - echo "Run: git clone <repo-url> && cd CR380-docker-lab && sudo ./run-labs.sh --learn"
+
+final_message: |
+  ===========================================
+  CR380 Docker Lab — VM prête / VM ready
+  Utilisateur / User: student
+  Mot de passe / Password: student
+  ===========================================

@@ -1,0 +1,22 @@
+# =============================================================================
+# CR380 - Docker Lab — .gitignore
+# =============================================================================
+
+# Logs and reports (auto-generated)
+logs/*.log
+results/report-*.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
