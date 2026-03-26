@@ -117,6 +117,10 @@ run_test() {
         "We now install the Docker packages:\n- docker-ce: the Docker engine\n- docker-ce-cli: the command line interface\n- containerd.io: the container runtime\n- docker-buildx-plugin: advanced build features\n- docker-compose-plugin: multi-container orchestration"
 
 
+    # Stop unattended-upgrades daemon which holds apt locks
+    sudo systemctl stop unattended-upgrades.service 2>/dev/null || true
+    sudo systemctl disable unattended-upgrades.service 2>/dev/null || true
+
     # Clear APT cache and wait for any apt-get locks to release
     sudo apt-get clean 2>/dev/null || true
     sudo systemctl stop apt-daily.service 2>/dev/null || true
