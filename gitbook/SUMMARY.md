@@ -8,3 +8,4 @@
 
 * [Lab 00 — Vérifications préalables](installation/preflight.md)
 * [Lab 01 — Désinstallation](installation/desinstallation.md)
+* [Lab 02 — Installation](installation/installation.md)
