@@ -116,18 +116,22 @@ run_test() {
         "Nous installons maintenant les paquets Docker:\n- docker-ce : le moteur Docker\n- docker-ce-cli : la ligne de commande\n- containerd.io : le runtime de conteneurs\n- docker-buildx-plugin : construction avancée\n- docker-compose-plugin : orchestration multi-conteneurs" \
         "We now install the Docker packages:\n- docker-ce: the Docker engine\n- docker-ce-cli: the command line interface\n- containerd.io: the container runtime\n- docker-buildx-plugin: advanced build features\n- docker-compose-plugin: multi-container orchestration"
 
+
     # Clear APT cache and wait for any apt-get locks to release
     sudo apt-get clean 2>/dev/null || true
+    sudo systemctl stop apt-daily.service 2>/dev/null || true
+    sudo systemctl stop apt-daily-upgrade.service 2>/dev/null || true
+    sleep 2
     local lock_wait=0
-    while [ -f /var/lib/apt/lists/lock ] || [ -f /var/cache/apt/archives/lock ] || [ -f /var/lib/dpkg/lock ]; do
-        if (( lock_wait > 30 )); then
-            echo "[warn] APT lock still held after 30s, proceeding anyway"
+    while [ -f /var/lib/apt/lists/lock ] || [ -f /var/cache/apt/archives/lock ] || [ -f /var/lib/dpkg/lock ] || [ -f /var/lib/dpkg/lock-frontend ]; do
+        if (( lock_wait > 90 )); then
+            echo "[warn] APT lock still held after 90s, force-breaking and proceeding"
+            sudo rm -f /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend 2>/dev/null || true
             break
         fi
         sleep 1
         lock_wait=$((lock_wait + 1))
     done
-
     run_cmd "Install Docker CE packages" "${TIMEOUT_BUILD}" \
         sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
             docker-ce docker-ce-cli containerd.io \
