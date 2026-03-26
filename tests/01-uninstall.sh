@@ -56,11 +56,11 @@ run_test() {
         # FR: Purger les paquets Docker
         # ---------------------------------------------------------------------
         learn_pause \
-            "Commande: sudo apt-get purge docker-ce docker-ce-cli containerd.io ...\napt remove --purge supprime le paquet ET ses fichiers de config." \
-            "Command: sudo apt-get purge docker-ce docker-ce-cli containerd.io ...\napt remove --purge removes the package AND its config files."
+            "Commande: sudo apt-get -o DPkg::Lock::Timeout=120 purge docker-ce docker-ce-cli containerd.io ...\napt remove --purge supprime le paquet ET ses fichiers de config." \
+            "Command: sudo apt-get -o DPkg::Lock::Timeout=120 purge docker-ce docker-ce-cli containerd.io ...\napt remove --purge removes the package AND its config files."
 
         run_cmd "Purge Docker packages" "0" \
-            sudo DEBIAN_FRONTEND=noninteractive apt-get remove --purge -y \
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 remove --purge -y \
             docker-ce docker-ce-cli containerd.io \
             docker-buildx-plugin docker-compose-plugin \
             docker-ce-rootless-extras 2>/dev/null || true
@@ -68,13 +68,13 @@ run_test() {
         # Remove old / unofficial versions
         for pkg in docker.io docker-doc docker-compose docker-compose-v2 \
                    podman-docker containerd runc; do
-            sudo DEBIAN_FRONTEND=noninteractive apt-get remove --purge -y "${pkg}" 2>/dev/null || true
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 remove --purge -y "${pkg}" 2>/dev/null || true
         done
 
         run_cmd "Clean apt cache" "${TIMEOUT_DEFAULT}" \
-            sudo apt-get clean || true
+            sudo apt-get -o DPkg::Lock::Timeout=120 clean || true
         run_cmd "Autoremove unused packages" "0" \
-            sudo DEBIAN_FRONTEND=noninteractive apt-get autoremove -y || true
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 autoremove -y || true
 
         pass "Packages purged / Paquets purgés"
 
@@ -138,7 +138,7 @@ run_test() {
 
         # Update package list
         run_cmd "Update package list" "${TIMEOUT_APT}" \
-            sudo apt-get update --fix-missing || true
+            sudo apt-get -o DPkg::Lock::Timeout=120 update --fix-missing || true
 
     else
         pass "Docker was not installed — nothing to uninstall / Docker n'était pas installé"

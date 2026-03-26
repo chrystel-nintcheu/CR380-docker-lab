@@ -32,10 +32,10 @@ run_test() {
         "We first need to install packages required to use an\nAPT repository over HTTPS: ca-certificates and curl."
 
     run_cmd "Update package index" "${TIMEOUT_APT}" \
-        sudo apt-get update || true
+        sudo apt-get -o DPkg::Lock::Timeout=120 update || true
 
     run_cmd "Install prerequisites (ca-certificates, curl)" "${TIMEOUT_APT}" \
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=120 install -y ca-certificates curl
     if (( CMD_EXIT_CODE == 0 )); then
         pass "Prerequisites installed / Pré-requis installés"
     else
@@ -106,7 +106,7 @@ run_test() {
 
     # Update package index with new repo
     run_cmd "Update package index with Docker repo" "${TIMEOUT_APT}" \
-        sudo apt-get update || true
+        sudo apt-get -o DPkg::Lock::Timeout=120 update || true
 
     # -------------------------------------------------------------------------
     # Step 4: Install Docker packages
@@ -117,27 +117,20 @@ run_test() {
         "We now install the Docker packages:\n- docker-ce: the Docker engine\n- docker-ce-cli: the command line interface\n- containerd.io: the container runtime\n- docker-buildx-plugin: advanced build features\n- docker-compose-plugin: multi-container orchestration"
 
 
-    # Stop unattended-upgrades daemon which holds apt locks
+    # Stop background apt services that hold dpkg/apt locks
     sudo systemctl stop unattended-upgrades.service 2>/dev/null || true
-    sudo systemctl disable unattended-upgrades.service 2>/dev/null || true
-
-    # Clear APT cache and wait for any apt-get locks to release
-    sudo apt-get clean 2>/dev/null || true
     sudo systemctl stop apt-daily.service 2>/dev/null || true
     sudo systemctl stop apt-daily-upgrade.service 2>/dev/null || true
+    sudo systemctl kill --signal=SIGTERM unattended-upgrades.service 2>/dev/null || true
     sleep 2
-    local lock_wait=0
-    while [ -f /var/lib/apt/lists/lock ] || [ -f /var/cache/apt/archives/lock ] || [ -f /var/lib/dpkg/lock ] || [ -f /var/lib/dpkg/lock-frontend ]; do
-        if (( lock_wait > 90 )); then
-            echo "[warn] APT lock still held after 90s, force-breaking and proceeding"
-            sudo rm -f /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend 2>/dev/null || true
-            break
-        fi
-        sleep 1
-        lock_wait=$((lock_wait + 1))
-    done
-    run_cmd "Install Docker CE packages" "${TIMEOUT_BUILD}" \
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+
+    # Use apt's built-in lock-wait (DPkg::Lock::Timeout=300) so apt
+    # itself waits up to 300s for other dpkg/apt processes to finish.
+    # The outer run_cmd timeout is set to 0 (no timeout) to avoid
+    # racing against the lock-wait.
+    run_cmd "Install Docker CE packages" 0 \
+        sudo DEBIAN_FRONTEND=noninteractive \
+            apt-get -o DPkg::Lock::Timeout=300 install -y \
             docker-ce docker-ce-cli containerd.io \
             docker-buildx-plugin docker-compose-plugin
     if (( CMD_EXIT_CODE == 0 )); then
@@ -145,7 +138,7 @@ run_test() {
     else
         fail "Failed to install Docker packages" \
              "exit code 0" "exit code ${CMD_EXIT_CODE}" \
-             "Essayez: sudo apt-get update && réessayez / Try: sudo apt-get update && retry"
+             "Essayez: sudo apt-get -o DPkg::Lock::Timeout=120 update && réessayez / Try: sudo apt-get -o DPkg::Lock::Timeout=120 update && retry"
         section_summary; return
     fi
 
@@ -180,7 +173,7 @@ run_test() {
     # Docker version
     assert_output_not_empty \
         "docker --version returns output / docker --version retourne une sortie" \
-        "Essayez: sudo apt-get install docker-ce / Try: sudo apt-get install docker-ce" \
+        "Essayez: sudo apt-get -o DPkg::Lock::Timeout=120 install docker-ce / Try: sudo apt-get -o DPkg::Lock::Timeout=120 install docker-ce" \
         docker --version
 
     # Docker service is active
