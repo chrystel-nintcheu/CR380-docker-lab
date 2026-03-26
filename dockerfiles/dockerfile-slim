@@ -1,0 +1,12 @@
+FROM nginx
+
+RUN apt-get update \
+    && apt-get -y install vim \
+       net-tools \
+       curl \
+    && apt -y autoremove \
+    && apt -y clean \
+    && apt -y purge \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/share/nginx/html

@@ -707,3 +707,32 @@ cleanup_image() {
     docker rmi -f "${image}" &>/dev/null || true
     log "Cleanup: removed image ${image}"
 }
+
+# -----------------------------------------------------------------------------
+# assert_image_smaller_than — Check an image is smaller than a reference
+# FR: Vérifier qu'une image est plus petite qu'une autre
+#
+# Usage: assert_image_smaller_than "slim_image" "big_image"
+# -----------------------------------------------------------------------------
+assert_image_smaller_than() {
+    local small_img="$1"
+    local big_img="$2"
+
+    local size_small size_big
+    size_small=$(docker image inspect "${small_img}" --format '{{.Size}}' 2>/dev/null || echo 0)
+    size_big=$(docker image inspect "${big_img}" --format '{{.Size}}' 2>/dev/null || echo 0)
+
+    if (( size_small > 0 && size_big > 0 && size_small < size_big )); then
+        local saved=$(( (size_big - size_small) / 1048576 ))
+        pass "'${small_img}' ($(( size_small / 1048576 ))MB) < '${big_img}' ($(( size_big / 1048576 ))MB) — saved ${saved}MB"
+    elif (( size_small == 0 || size_big == 0 )); then
+        fail "Cannot compare image sizes" \
+             "both images exist" "missing image" \
+             "Assurez-vous que les deux images sont construites"
+    else
+        fail "'${small_img}' is NOT smaller than '${big_img}'" \
+             "$(( size_small / 1048576 ))MB < $(( size_big / 1048576 ))MB" \
+             "$(( size_small / 1048576 ))MB >= $(( size_big / 1048576 ))MB" \
+             "Vérifiez le Dockerfile slim (apt clean, rm lists, etc.)"
+    fi
+}
