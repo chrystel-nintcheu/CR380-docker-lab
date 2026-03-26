@@ -27,3 +27,7 @@
 ## Persistance
 
 * [Lab 11 — Volumes](persistance/volumes.md)
+
+## Finalisation
+
+* [Lab 99 — Nettoyage](finalisation/nettoyage.md)
