@@ -2,9 +2,19 @@
 
 Bienvenue dans le guide pratique du cours CR380 de Polytechnique Montréal. Ce guide accompagne la suite de tests automatisés qui reproduit chaque exercice de lab Docker.
 
+{% tabs %}
+{% tab title="Français" %}
 {% hint style="info" %}
 Ce guide est généré à partir du dépôt [CR380-docker-lab](https://github.com/chrystel-nintcheu/CR380-docker-lab). Les commandes présentées sont les mêmes que celles exécutées par la suite de tests automatisés.
 {% endhint %}
+{% endtab %}
+
+{% tab title="English" %}
+{% hint style="info" %}
+This guide is generated from the [CR380-docker-lab](https://github.com/chrystel-nintcheu/CR380-docker-lab) repository. The commands shown are the same as those executed by the automated test suite.
+{% endhint %}
+{% endtab %}
+{% endtabs %}
 
 ## Progression des labs
 
