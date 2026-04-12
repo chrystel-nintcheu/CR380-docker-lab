@@ -156,7 +156,8 @@ CR380-docker-lab/
 ├── gitbook/                   # Pages GitBook bilingues / Bilingual GitBook pages
 ├── cloud-init/
 │   ├── user-data-fresh.yaml         # VM propre / Clean VM
-│   └── provision-multipass.sh       # Lanceur Multipass / Multipass launcher
+│   ├── provision-multipass.sh       # Lanceur Multipass (Linux/macOS) / Multipass launcher (Linux/macOS)
+│   └── provision-multipass.bat      # Lanceur Multipass (Windows) / Multipass launcher (Windows)
 ├── results/                   # Rapports JSON / JSON reports (auto-generated)
 └── logs/                      # Journaux détaillés / Detailed logs (auto-generated)
 ```
